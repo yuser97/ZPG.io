@@ -5,14 +5,27 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+    <div id="deathMenu" style="display: none;">
+        <h2>Герой пал в бою!</h2>
+        <button onclick="restartGame()">Начать заново</button>
+        <button onclick="resurrectHero()">Воскресить (-50% монет, -1 уровень)</button>
+    </div>
+
     <div id="gameContainer">
         <div id="statPanel">
             <input type="text" id="nameInput" placeholder="Введите имя">
             <button onclick="startGame()">Начать игру</button>
             <div id="stats"></div>
         </div>
+
+        <div id="mapPanel">
+            <h3>Карта</h3>
+            <div id="locationInfo"></div>
+        </div>
+
         <div id="eventPanel"></div>
     </div>
+
     <script src="game.js"></script>
 </body>
 </html>
