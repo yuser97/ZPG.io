@@ -23,9 +23,9 @@ let character = {
 };
 
 let enemies = [
-    { name: 'Гоблин', health: 1, attack: 5 },
-    { name: 'Орк', health: 1, attack: 10 },
-    { name: 'Дракон', health: 1, attack: 20 }
+    { name: 'Гоблин', health: 10, attack: 5 },
+    { name: 'Орк', health: 20, attack: 10 },
+    { name: 'Дракон', health: 30, attack: 20 }
 ];
 
 const items = {
