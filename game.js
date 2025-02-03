@@ -23,9 +23,9 @@ let character = {
 };
 
 let enemies = [
-    { name: 'Гоблин', health: 10, attack: 5 },
-    { name: 'Орк', health: 20, attack: 10 },
-    { name: 'Дракон', health: 30, attack: 20 }
+    { name: 'Гоблин', health: 5, attack: 5 },
+    { name: 'Орк', health: 10, attack: 10 },
+    { name: 'Дракон', health: 15, attack: 20 }
 ];
 
 const items = {
@@ -62,6 +62,14 @@ const QUESTS = {
     }
 };
 
+// Инициализация интервала для перемещений
+setInterval(() => {
+    if (character.travelCooldown > 0) {
+        character.travelCooldown--;
+        updateMapDisplay();
+    }
+}, 3000);
+
 let gameInterval;
 
 // Основные функции
@@ -72,6 +80,7 @@ function startGame() {
     character.name = name;
     document.getElementById('nameInput').remove();
     document.querySelector('button').remove();
+    document.getElementById('GameStart').style.display = 'none';
     
     gameInterval = setInterval(gameLoop, 3000);
     updateStats();
@@ -81,7 +90,7 @@ function startGame() {
 function updateStats() {
     const statsDiv = document.getElementById('stats');
     statsDiv.innerHTML = `
-        <h3>${character.name}</h3>
+        <h3>Персонаж: ${character.name}</h3>
         <p>Уровень: ${character.level} (${character.xp}/${character.nextLevel} XP)</p>
         <p>Класс: ${character.class}</p>
         <p>Монеты: ${character.coins} 🪙</p>
@@ -99,10 +108,6 @@ function updateStats() {
                 `<p>${getQuestDescription(character.currentQuest)}</p>
                  <p>Прогресс: ${character.questProgress}/${character.currentQuest.amount}</p>` 
                 : '<p>Нет активного квеста</p>'}
-        </div>
-        <div class="location">
-            <p>Локация: ${LOCATIONS[character.location].name}</p>
-            <p>Перемещение через: ${character.travelCooldown} ходов</p>
         </div>
     `;
 }
@@ -163,48 +168,59 @@ function addEvent(text) {
     eventPanel.scrollTop = eventPanel.scrollHeight;
 }
 
+
+function getRandom() {
+    return Math.random() * (4 - 1) + 1;
+}
+
 function handleRandomEvent() {
-    const events = [
-        {
-            type: 'battle',
-            weight: 0.6,
-            action: () => startBattle()
-        },
-        {
-            type: 'treasure',
-            weight: 0.3,
-            action: () => {
-                const coins = 20 + 666 * 15;
-                character.coins += coins;
-                addEvent(`Найден клад! Получено ${coins} монет`);
+        const events = [
+            {
+                type: 'train',
+                weight: 0.65,
+                action: () => train()
+            },
+            {
+                type: 'battle',
+                weight: 0.5,
+                action: () => startBattle()
+            },
+            {
+                type: 'treasure',
+                weight: 0.3,
+                action: () => {
+                    const dangerLevel = LOCATIONS[character.location].danger;
+                    const coins = 20 + dangerLevel * 15;
+                    character.coins += coins;
+                    addEvent(`Найден клад! Получено ${coins} монет`);
+                } 
+            },
+            {
+                type: 'trader',
+                weight: 0.1,
+                action: () => meetTrader()
             }
-        },
-        {
-            type: 'trader',
-            weight: 0.1,
-            action: () => meetTrader()
+        ];
+        const totalWeight = events.reduce((sum, e) => sum + e.weight, 0);
+        const random = Math.random() * totalWeight;
+        
+        let cumulative = 0;
+        for (const event of events) {
+            cumulative += event.weight;
+            if (random < cumulative) {
+                event.action();
+                break;
+            }
         }
-    ];
-    
-    const totalWeight = events.reduce((sum, e) => sum + e.weight, 0);
-    const random = Math.random() * totalWeight;
-    
-    let cumulative = 0;
-    for (const event of events) {
-        cumulative += event.weight;
-        if (random < cumulative) {
-            event.action();
-            break;
-        }
-    }
 }
 
 // Игровой цикл
 function gameLoop() {
     if (!character.isAlive || character.isInBattle) return;
     
-    handleQuests();
-    autoChangeLocation();
+    if (character.travelCooldown === 0) {
+        autoChangeLocation();
+    }
     
     if (character.location === 'city') {
         character.health = Math.min(character.health + 15, character.maxHealth);
@@ -216,21 +232,24 @@ function gameLoop() {
         if (Math.random() < 0.3 + dangerLevel * 0.2) handleRandomEvent(dangerLevel);
     }
     
-    checkLevelUp();
-    autoUseItems();
-    updateStats();
+        handleQuests();
+        checkLevelUp();
+        autoUseItems();
+        updateStats();
 }
 
 // Боевая система
 async function startBattle(dangerLevel = 1) {
-    character.isInBattle = true;
-    const enemy = {...enemies[Math.floor(Math.random() * enemies.length)]};
-    enemy.health *= 1 + dangerLevel * 0.5;
-    enemy.attack *= 1 + dangerLevel * 0.3;
+        character.isInBattle = true;
+        const enemy = {...enemies[Math.floor(Math.random() * enemies.length)]};
+        enemy.health *= 1 + dangerLevel * 0.5;
+        enemy.attack *= 1 + dangerLevel * 0.3;
+        setTimeout(() => {
+            
+            addEvent(`⚔️ БИТВА: ${character.name} vs ${enemy.name}!`);
+        }, 3000);
     
-    addEvent(`⚔️ БИТВА: ${character.name} vs ${enemy.name}!`);
-
-    const scroll = character.inventory.find(i => i.type === 'combat');
+        const scroll = character.inventory.find(i => i.type === 'combat');
     if (scroll) {
         enemy.health -= scroll.effect.damage;
         addEvent(`🔥 СВИТОК: ${scroll.name} наносит ${scroll.effect.damage} урона!`);
@@ -244,12 +263,16 @@ async function startBattle(dangerLevel = 1) {
     }
 
     if (character.health > 0) {
-        const xpGain = Math.floor(2 * 2);
+        const xpGain = Math.floor(enemy.attack * 2);
         character.xp += xpGain;
-        addEvent(`🎉 ПОБЕДА: Получено ${xpGain} XP!`);
+        setTimeout(() => {
+            addEvent(`🎉 ПОБЕДА: Получено ${xpGain} XP!`);
+        }, 3000);
         character.health = Math.min(character.health + 20, character.maxHealth);
     } else {
-        addEvent(`💀 ПОРАЖЕНИЕ: ${character.name} погиб!`);
+        setTimeout(() => {     
+            addEvent(`💀 ПОРАЖЕНИЕ: ${character.name} погиб!`);
+        }, 3000);
         character.isAlive = false;
         clearInterval(gameInterval);
         showDeathMenu();
@@ -265,7 +288,7 @@ function attackCycle(attacker, defender) {
             addEvent(`⚡ АТАКА: ${attacker.name} → ${defender.name} (${damage} урона)`);
             updateStats();
             resolve();
-        }, 3000);
+        }, 6000);
     });
 }
 
@@ -382,39 +405,44 @@ function completeQuest() {
 
 // Система перемещений
 function autoChangeLocation() {
-    const prevLocation = character.location;
-    let newLocation;
-    
-    if (character.health < character.maxHealth * 0.4) {
-        newLocation = 'city';
-    } else {
-        const locations = Object.keys(LOCATIONS).filter(l => l !== 'city');
-        newLocation = locations[Math.floor(Math.random() * locations.length)];
-        if (Math.random() < 0.3) newLocation = prevLocation;
-    }
-    
-    if (newLocation !== prevLocation) {
-        character.location = newLocation;
-        character.travelCooldown = 3 + Math.floor(Math.random() * 4);
-        addEvent(`🗺️ Перемещение: ${LOCATIONS[newLocation].name}`);
-        handleLocationEvent(prevLocation, newLocation);
-        updateMapDisplay();
-    }
+    setTimeout(() => {
+        const prevLocation = character.location;
+        let newLocation;
+        
+        if (character.health < character.maxHealth * 0.4) {
+            newLocation = 'city';
+        } else {
+            const locations = Object.keys(LOCATIONS).filter(l => l !== 'city');
+            newLocation = locations[Math.floor(Math.random() * locations.length)];
+            if (Math.random() < 0.3) newLocation = prevLocation;
+        }
+        
+        if (newLocation !== prevLocation && character.travelCooldown === 0) {
+            character.location = newLocation;
+            character.travelCooldown = 3 + Math.floor(Math.random() * 4);
+            addEvent(`🗺️ Перемещение: ${LOCATIONS[newLocation].name}`);
+            handleLocationEvent(prevLocation, newLocation);
+            updateMapDisplay();
+        }      
+    }, 3000);
 }
 
-function handleLocationEvent(oldLoc, newLoc) {
-    if (newLoc === 'city') {
-        addEvent("🏥 Полное восстановление в городе!");
-        character.health = character.maxHealth;
-        character.mana = character.maxMana;
-    } else {
-        const events = [
-            `Чувствует древнюю магию в ${LOCATIONS[newLoc].name}`,
-            `Замечает подозрительные следы`,
-            `Слышит странные звуки из темноты`
-        ];
-        addEvent(`🌌 ${character.name} ${events[Math.floor(Math.random() * events.length)]}`);
-    }
+function handleLocationEvent(oldLoc , newLoc) {
+    setTimeout(() => {
+        if (newLoc === 'city') {
+            addEvent("🏥 Полное восстановление в городе!");
+            character.health = character.maxHealth;
+            character.mana = character.maxMana;
+        } else {
+            const events = [
+                `Чувствует древнюю магию в ${LOCATIONS[newLoc].name}`,
+                `Замечает подозрительные следы`,
+                `Слышит странные звуки из темноты`
+            ];
+            addEvent(`🌌 ${character.name} ${events[Math.floor(Math.random() * events.length)]}`);
+        }
+        
+    }, 3000);
 }
 
 function updateMapDisplay() {
@@ -461,27 +489,29 @@ function useItem(item) {
     }
 }
 
-//Torgovlya
+//Торговля
 function meetTrader() {
-    const itemKeys = Object.keys(items);
-    const randomItem = items[itemKeys[Math.floor(Math.random() * itemKeys.length)]];
-    const price = Math.floor(randomItem.price * (1 + Math.random() * 0.5));
-    
-    addEvent(`ТОРГОВЕЦ: Предлагает ${randomItem.name} за ${price} монет`);
-    
-    // Автоматическая покупка
-    if (shouldBuyItem(randomItem, price)) {
-        // Продаем предметы если нужно место/деньги
-        while (character.coins < price || character.inventory.length >= character.maxInventory) {
-            if (!sellWorstItem()) break;
-        }
+    setTimeout(() => {
+        const itemKeys = Object.keys(items);
+        const randomItem = items[itemKeys[Math.floor(Math.random() * itemKeys.length)]];
+        const price = Math.floor(randomItem.price * (1 + Math.random() * 0.5));
         
-        if (character.coins >= price && character.inventory.length < character.maxInventory) {
-            character.coins -= price;
-            character.inventory.push({...randomItem});
-            addEvent(`АВТО-ПОКУПКА: Приобретен ${randomItem.name}`);
-        }
-    }
+        addEvent(`ТОРГОВЕЦ: Предлагает ${randomItem.name} за ${price} монет`);
+        
+        // Автоматическая покупка
+        if (shouldBuyItem(randomItem, price)) {
+            // Продаем предметы если нужно место/деньги
+            while (character.coins < price || character.inventory.length >= character.maxInventory) {
+                if (!sellWorstItem()) break;
+            }
+            
+            if (character.coins >= price && character.inventory.length < character.maxInventory) {
+                character.coins -= price;
+                character.inventory.push({...randomItem});
+                addEvent(`АВТО-ПОКУПКА: Приобретен ${randomItem.name}`);
+            }
+        }      
+    }, 3000);
 }
 function shouldBuyItem(item, price) {
     const inventoryCount = character.inventory.filter(i => i.name === item.name).length;
@@ -551,13 +581,15 @@ function findItem() {
 }
 
 function train() {
-    if (Math.random() < 0.5) {
-        character.strength += 1;
-        addEvent(`${character.name} тренируется с мечом! Сила +1.`);
-    } else {
-        character.magic += 1;
-        addEvent(`${character.name} изучает заклинания! Магия +1.`);
-    }
+    setTimeout(() => {     
+        if (Math.random() < 0.5) {
+            character.strength += 1;
+            addEvent(`${character.name} тренируется с мечом! Сила +1.`);
+        } else {
+            character.magic += 1;
+            addEvent(`${character.name} изучает заклинания! Магия +1.`);
+        }
+    }, 3000);
 }
 
 // Система уровней
@@ -633,13 +665,8 @@ function resurrectHero() {
     document.getElementById('deathMenu').style.display = 'none';
     gameInterval = setInterval(gameLoop, 3000);
     updateStats();
-    addEvent("⚡ Воскрешение! Потерян 1 уровень и 50% монет");
+    setTimeout(() => { 
+        addEvent("⚡ Воскрешение! Потерян 1 уровень и 50% монет");
+    }, 3000);
 }
 
-// Инициализация интервала для перемещений
-setInterval(() => {
-    if (character.travelCooldown > 0) {
-        character.travelCooldown--;
-        updateMapDisplay();
-    }
-}, 3000);

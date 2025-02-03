@@ -135,6 +135,89 @@ button:hover {
     background-color: #ff9800;
 }
 
+@media (max-width: 767px) {
+  
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    #stats h3 {
+        font-size: 1.4em;
+    }
+
+    #mapPanel h3,
+    .inventory h4,
+    .quest h4 {
+        font-size: 1.2em;
+    }
+
+    button {
+        padding: 12px 20px;
+        font-size: 16px;
+        width: 100%;
+    }
+
+    .event {
+        font-size: 0.9em;
+        padding: 8px;
+    }
+
+    #deathMenu {
+        width: 90%;
+        padding: 15px;
+    }
+
+    #deathMenu button {
+        width: 100%;
+        margin: 8px 0;
+    }
+
+    .item {
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+    }
+
+    #stats p {
+        margin: 6px 0;
+    }
+
+    .event {
+        font-size: 0.8em;
+    }
+
+    #deathMenu h2 {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+
+    #mapPanel p {
+        font-size: 0.8em;
+    }
+}
+
+
+@media (min-width: 768px) and (orientation: landscape) {
+    #gameContainer {
+        flex-wrap: nowrap;
+    }
+    
+    #eventPanel {
+        height: 85vh;
+    }
+}
+
+@media (min-height: 800px) {
+    #eventPanel {
+        height: 70vh;
+    }
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
