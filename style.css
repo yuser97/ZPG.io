@@ -42,6 +42,12 @@ body {
     border-radius: 5px;
 }
 
+#locationInfo p {
+    font-size: 0.9em;
+    color: #ccc;
+    margin-top: 5px;
+}
+
 #eventPanel {
     flex: 1;
     height: 80vh;
@@ -88,17 +94,15 @@ button:hover {
     font-size: 0.9em;
 }
 
-.quest {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #3a3a3a;
-    border-radius: 5px;
+#currentQuestTitle {
+    font-style: italic;
+    color: #4CAF50;
+    margin: 8px 0;
+    min-height: 40px;
 }
 
-.quest p {
-    margin: 5px 0;
-    font-size: 0.9em;
-    color: #ccc;
+.progress-bar {
+    margin-top: 10px;
 }
 
 #deathMenu {

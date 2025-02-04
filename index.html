@@ -16,9 +16,19 @@
             <input type="text" id="nameInput" placeholder="Введите имя">
             <button onclick="startGame()" id="GameStart">Начать игру</button>
             <div id="stats"></div>
+            <div class="quest">
+                <h4>Текущее задание:</h4>
+                <p id="currentQuestTitle">Загрузка...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="questBar"></div>
+                    <span id="questPercent">0%</span>
+                </div>
+            </div>
             <div id="mapPanel">
                 <h3>Карта</h3>
-                <div id="locationInfo"></div>
+                <div id="locationInfo">
+                    <p id="locationDescription"></p>
+                </div>
             </div>
         </div>
 
