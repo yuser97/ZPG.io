@@ -37,13 +37,15 @@ const items = {
 
 const LOCATIONS = {
     city: { name: 'Столица Эльдрамир', danger: 0, description: 'Безопасная зона с гильдией авантюристов' },
-    forest: { name: 'Лес Теней', danger: 1, description: 'Густой лес со слабыми противниками' },
-    mountains: { name: 'Пики Хаоса', danger: 3, description: 'Опасная зона с сильными врагами' },
-    valley: { name: 'Долина Вечного Цветения', danger: 1, description: 'Живописная долина с магическими растениями' },
-    ruins: { name: 'Руины Древней Империи', danger: 2,description: 'Остатки забытой цивилизации, полные тайн' },
-    lake: { name: 'Озеро Хрустальных Вод', danger: 3, description: 'Мерцающие воды с целебными свойствами' },
-    forest: { name: 'Лес Шепчущих Деревьев', danger: 4,description: 'Древний лес с разумными растениями' },
-    canyon: { name: 'Каньон Песчаных Бурь', danger: 5,description: 'Бескрайние песчаные просторы с тайнами' }
+    shadowTunnel: { name: 'Туннель Теней', danger: 1, description: 'Темный туннель с редкими слабосильными существами' },
+    hauntedChambers: { name: 'Призрачные Чертоги', danger: 2, description: 'Заброшенные комнаты, населенные призраками' },
+    crystalCave: { name: 'Пещера Кристаллов', danger: 1, description: 'Светящаяся пещера с магическими кристаллами' },
+    ancientVault: { name: 'Древний Склеп', danger: 3, description: 'Забытое хранилище с ловушками и сильными врагами' },
+    forbiddenLabyrinth: { name: 'Запретный Лабиринт', danger: 4, description: 'Сложный лабиринт с разумными ловушками' },
+    deepAbyss: { name: 'Глубокая Бездна', danger: 5, description: 'Опасная зона с сильными существами и неизвестными тайнами' },
+    hiddenTemple: { name: 'Скрытый Храм', danger: 2, description: 'Тайное святилище с древними артефактами' },
+    fungalCavern: { name: 'Грибковая Пещера', danger: 3, description: 'Пещера, наполненная светящимися грибами и мутантами' },
+    treasureHorde: { name: 'Сокровищница', danger: 4, description: 'Зона с богатыми сокровищами, охраняемая могущественными стражами' }
 };
 
 
@@ -61,7 +63,11 @@ setInterval(() => {
     if (character.travelCooldown > 0) {
         character.travelCooldown--;
     }
-}, 30000);
+}, 60000);
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 let gameInterval;
 
@@ -71,11 +77,10 @@ function startGame() {
     if (!name) return;
     
     character.name = name;
-    document.getElementById('nameInput').remove();
-    document.querySelector('button').remove();
-    document.getElementById('GameStart').style.display = 'none';
+    document.querySelector('.start').style.display = 'none';
+    document.querySelector('.navigation').style.display = 'flex'
     
-    gameInterval = setInterval(gameLoop, 30000);
+    gameInterval = setInterval(gameLoop, 10000);
     updateStats();
     addEvent(`Игра началась! ${character.name} начинает приключение.`);
 }
@@ -83,20 +88,24 @@ character.turnsPassed = 0;
 function updateStats() {
     document.getElementById('questPercent').innerHTML = +character.turnsPassed * 100 / 500+'%';
     const statsDiv = document.getElementById('stats');
+    const inventory = document.querySelector('#inventory')
+
     statsDiv.innerHTML = `
         <h3>Персонаж: ${character.name}</h3>
         <p>Уровень: ${character.level} (${character.xp}/${character.nextLevel} XP)</p>
         <p>Класс: ${character.class}</p>
-        <p>Монеты: ${character.coins} 🪙</p>
+        <p>Монеты: ${character.coins}  </p>
         <p>Сила: ${character.strength}</p>
         <p>Магия: ${character.magic}</p>
         <p>Здоровье: ${character.health}/${character.maxHealth}</p>
         ${character.class === 'Маг' ? `<p>Мана: ${character.mana}/${character.maxMana}</p>` : ''}
-        <div class="inventory">
-            <h4>Инвентарь (${character.inventory.length}/${character.maxInventory}):</h4>
-            ${character.inventory.map(item => `<div class="item">${item.name}</div>`).join('')}
-        </div>
-    `;
+        `;
+    inventory.innerHTML = `
+    <div class="inventory">
+        <h4>Инвентарь (${character.inventory.length}/${character.maxInventory}):</h4>
+        ${character.inventory.map(item => `<div class="item">${item.name}</div>`).join('')}
+    </div>
+    `
 }
 
 // Cпособности классов
@@ -720,3 +729,24 @@ function resurrectHero() {
     }, 3000);
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.navigation button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Обработчик клика по кнопкам
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Убираем активный класс у всех кнопок и контента
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Добавляем активный класс выбранной кнопке и соответствующему контенту
+            tab.classList.add('active');
+            const targetTab = tab.getAttribute('data-tab');
+            document.getElementById(targetTab).classList.add('active');
+        });
+    });
+
+    // Инициализация: показываем первую вкладку
+    tabs[0].click();
+});

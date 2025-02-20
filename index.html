@@ -1,41 +1,66 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Автономный герой</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Автономный герой</title>
+        <link rel="stylesheet" type="text/css" href="./css/style.css">
+        <script src="./game.js" async></script>
+        
 </head>
 <body>
     <div id="deathMenu" style="display: none;">
         <h2>Герой пал в бою!</h2>
-        <button onclick="restartGame()">Начать заново</button>
         <button onclick="resurrectHero()">Воскресить (-50% монет, -1 уровень)</button>
     </div>
 
+    <nav class="navigation">
+        <button data-tab="character" class="active">Персонаж</button>
+        <button data-tab="inventory">Инвентарь</button>
+        <button data-tab="quest">Задание</button>
+        <button data-tab="mapPanel">Локация</button>
+    </nav>
+
     <div id="gameContainer">
-        <div id="statPanel">
-            <input type="text" id="nameInput" placeholder="Введите имя">
-            <button onclick="startGame()" id="GameStart">Начать игру</button>
-            <div id="stats"></div>
-            <div class="quest">
+        <aside id="statPanel">
+            <div id="character" class="tab-content active">
+                <div class="start">
+                    <label for="nameInput" class="sr-only">Введите имя персонажа</label>
+                    <input type="text" id="nameInput" aria-required="true" placeholder="Введите имя">
+                    <button onclick="startGame()" id="GameStart">Начать игру</button>
+                </div>
+                <section aria-label="Характеристики персонажа" id="stats"></section>
+            </div>
+            <div id="inventory" class="tab-content">
+                
+            </div>
+            <div id="quest" class="quest tab-content">
                 <h4>Текущее задание:</h4>
-                <p id="currentQuestTitle">Загрузка...</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="questBar"></div>
-                    <span id="questPercent">0%</span>
-                </div>
+                <p id="currentQuestTitle">Нету задания</p>
+                <div class="progress-bar" role="progressbar" 
+                aria-valuenow="0" 
+                aria-valuemin="0" 
+                aria-valuemax="100">
+               <div class="progress-fill" id="questBar"></div>
+               <span id="questPercent" aria-hidden="true">0%</span>
+           </div>
             </div>
-            <div id="mapPanel">
+            <div id="mapPanel" class="tab-content">
                 <h3>Карта</h3>
-                <div id="locationInfo">
-                    <p id="locationDescription"></p>
+                <div id="locationInfo" aria-live="polite">
+                    <p id="locationDescription">
+                        <strong>Столица Эльдрамир</strong>
+                        <p>Безопасная зона с гильдией авантюристов</p>
+                    </p>
                 </div>
             </div>
-        </div>
+        </aside>
 
 
-        <div id="eventPanel"></div>
+        <section id="eventPanel" aria-live="assertive">
+            <!-- События -->
+        </section>
     </div>
 
-    <script src="game.js"></script>
 </body>
 </html>
